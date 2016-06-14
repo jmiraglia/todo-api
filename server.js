@@ -1,23 +1,12 @@
 var express = require('express');
+var body_parser = require('body-parser');
+
 var app = express();
 var PORT = process.env.PORT || 3000;
-var todos = [{
-        id: 1,
-        description: 'Meet mom for lunch',
-        completed: false
-    },
-    {
-        id: 2,
-        description: 'Go to market',
-        completed: false
-    },
-    {
-        id: 3,
-        description: 'Take the dog for a walk',
-        completed: true
-    }
-];
+var todos = [];
+var todo_next_id = 1;
 
+app.use(body_parser.json());
 
 app.get('/', function(req, res){
     res.send('Todo API Root');
@@ -47,6 +36,22 @@ app.get('/todos/:id', function(req, res){
     }
 });
 
+app.post('/todos', function(req, res){
+    var body = req.body;
+
+    if(typeof body.description === 'string'
+        && typeof body.completed === 'boolean') {
+        body.id = todo_next_id++;
+        todos.push(body);
+    } else {
+        console.log('Invalid information sent POST');
+    }
+
+    res.json(body);
+});
+
 app.listen(PORT, function(){
    console.log('Express server listening on port ' + PORT);
 });
+
+// May 12th from Doug Rebeles cell phone
