@@ -17,12 +17,22 @@ app.get('/', function(req, res){
 app.get('/todos', function(req, res){
     var query_params = req.query,
         filtered_todos = todos,
-        filter;
+        filter = {};
 
     if(query_params.hasOwnProperty('completed') && query_params.completed === 'true'){
-        filter = {completed: true};
+        filter.completed = true;
     } else if (query_params.hasOwnProperty('completed') && query_params.completed === 'true'){
-        filter = {completed: false};
+        filter.completed = false;
+    }
+
+    if(query_params.hasOwnProperty('q') && query_params.q.length > 0){
+        filtered_todos = _.filter(filtered_todos, function(todo){
+            if(todo.description.toLowerCase().indexOf(query_params.q.toLowerCase()) !== -1){
+                return 1;
+            } else {
+                return 0;
+            }
+        });
     }
 
     if(filter){
