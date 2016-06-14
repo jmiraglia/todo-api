@@ -1,5 +1,6 @@
 var express = require('express');
 var body_parser = require('body-parser');
+var _ = require('underscore');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -23,11 +24,7 @@ app.get('/todos/:id', function(req, res){
         matched_todo;
 
     // Find the requested todo by id
-    for(var i=0;i<todos.length;i++){
-        if(todos[i].id === todo_id){
-            matched_todo = todos[i];
-        }
-    }
+    matched_todo = _.findWhere(todos, {id: todo_id});
 
     if(matched_todo){
         res.json(matched_todo);
@@ -37,15 +34,16 @@ app.get('/todos/:id', function(req, res){
 });
 
 app.post('/todos', function(req, res){
-    var body = req.body;
+    // Only return valid fields
+    var body = _.pick(req.body, 'description', 'completed');
 
-    if(typeof body.description === 'string'
-        && typeof body.completed === 'boolean') {
-        body.id = todo_next_id++;
-        todos.push(body);
-    } else {
-        console.log('Invalid information sent POST');
+    if(!_.isString(body.description) || !_.isBoolean(body.completed) || body.description.trim().length === 0){
+        return res.status(400).send();
     }
+
+    body.description = body.description.trim();
+    body.id = todo_next_id++;
+    todos.push(body);
 
     res.json(body);
 });
@@ -53,5 +51,3 @@ app.post('/todos', function(req, res){
 app.listen(PORT, function(){
    console.log('Express server listening on port ' + PORT);
 });
-
-// May 12th from Doug Rebeles cell phone
