@@ -27,9 +27,9 @@ app.get('/todos/:id', function(req, res){
     matched_todo = _.findWhere(todos, {id: todo_id});
 
     if(matched_todo){
-        res.json(matched_todo);
+        res.status(200).json(matched_todo);
     } else {
-        res.status(404).send();
+        res.status(404).json({"error": "no todo found with that id"});
     }
 });
 
@@ -38,14 +38,27 @@ app.post('/todos', function(req, res){
     var body = _.pick(req.body, 'description', 'completed');
 
     if(!_.isString(body.description) || !_.isBoolean(body.completed) || body.description.trim().length === 0){
-        return res.status(400).send();
+        return res.status(404).json({"error": "invalid data sent"});
     }
 
     body.description = body.description.trim();
     body.id = todo_next_id++;
     todos.push(body);
 
-    res.json(body);
+    res.status(200).json(body);
+});
+
+app.delete('/todos/:id', function(req, res){
+    var todo_id = parseInt(req.params.id, 10),
+        matched_todo = _.findWhere(todos, {id: todo_id});
+
+    if(matched_todo){
+        // Remove the matched_todo from array
+        todos = _.without(todos, matched_todo);
+        res.status(200).json(matched_todo);
+    } else {
+        res.status(404).json({"error": "no todo found with that id"});
+    }
 });
 
 app.listen(PORT, function(){
