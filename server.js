@@ -142,7 +142,13 @@ app.post('/users/login', function (req, res) {
 
     db.user.authenticate(body)
         .then(function (user){
-            res.status(200).json(user.toPublicJSON());
+            var token =  user.generateToken('authentication');
+
+            if(token){
+                res.header('Auth', token).json(user.toPublicJSON());
+            } else {
+                res.status(401).send();
+            }
         })
         .catch(function(e){
             res.status(401).send();
