@@ -45,27 +45,34 @@ app.get('/todos', function (req, res) {
 
 // return a single todo item
 app.get('/todos/:id', function (req, res) {
-    var todo_id = parseInt(req.params.id, 10),
-        matched_todo;
-    // Find the requested todo by id
-    matched_todo = _.findWhere(todos, {id: todo_id});
+    var todo_id = parseInt(req.params.id, 10);
 
-    if (matched_todo) {
-        res.status(200).json(matched_todo);
-    } else {
-        res.status(404).json({"error": "no todo found with that id"});
-    }
+    db.todo
+        .findById(todo_id)
+        .then(function (todo) {
+            if (!!todo) {
+                res.status(200).json(todo.toJSON());
+            } else {
+                res.status(404).json({"error": "No todo found with that ID"});
+            }
+        })
+        .catch(function (e) {
+            res.status(500).json(e);
+        });
 });
 
 app.post('/todos', function (req, res) {
     // Only return valid fields
     var body = _.pick(req.body, 'description', 'completed');
 
-    db.todo.create(body).then(function (todo) {
-        res.status(200).json(todo.toJSON());
-    }).catch(function (e) {
-        res.status(400).json(e);
-    });
+    db.todo
+        .create(body)
+        .then(function (todo) {
+            res.status(200).json(todo.toJSON());
+        })
+        .catch(function (e) {
+            res.status(500).json(e);
+        });
 });
 
 app.delete('/todos/:id', function (req, res) {
