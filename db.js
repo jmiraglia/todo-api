@@ -1,11 +1,11 @@
 var Sequelize = require('sequelize');
 var env = process.env.NODE_ENV || 'development';
 var sql;
-if(env === 'production'){
+if (env === 'production') {
     sql = new Sequelize(process.env.DATABSE_URL, {
         dialect: 'postgres'
     });
-} else if (env === 'development'){
+} else {
     sql = new Sequelize(undefined, undefined, undefined, {
         'dialect': 'sqlite',
         'storage': __dirname + '/data/dev-todo-api.sqlite'
