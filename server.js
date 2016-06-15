@@ -1,6 +1,7 @@
 var express = require('express');
 var body_parser = require('body-parser');
 var _ = require('underscore');
+var db = require('./db.js');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -60,15 +61,11 @@ app.post('/todos', function (req, res) {
     // Only return valid fields
     var body = _.pick(req.body, 'description', 'completed');
 
-    if (!_.isString(body.description) || !_.isBoolean(body.completed) || body.description.trim().length === 0) {
-        return res.status(404).json({"error": "invalid data sent"});
-    }
-
-    body.description = body.description.trim();
-    body.id = todo_next_id++;
-    todos.push(body);
-
-    res.status(200).json(body);
+    db.todo.create(body).then(function (todo) {
+        res.status(200).json(todo.toJSON());
+    }).catch(function (e) {
+        res.status(400).json(e);
+    });
 });
 
 app.delete('/todos/:id', function (req, res) {
@@ -113,6 +110,10 @@ app.put('/todos/:id', function (req, res) {
     return res.status(200).json(matched_todo);
 });
 
-app.listen(PORT, function () {
-    console.log('Express server listening on port ' + PORT);
-});
+db.sql.sync()
+    .then(function () {
+            app.listen(PORT, function () {
+                console.log('Express server listening on port ' + PORT);
+            });
+        }
+    );

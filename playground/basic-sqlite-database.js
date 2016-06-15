@@ -19,7 +19,9 @@ var Todo = sql.define('todo', {
     }
 });
 
-sql.sync().then(function () {
+sql.sync({
+
+}).then(function () {
     console.log('Everything is synced');
     //get item by id and print
 
@@ -30,6 +32,7 @@ sql.sync().then(function () {
             console.log('No todo found');
         }
     });
+
     //Todo.create({
     //    description: 'Walk the Dog',
     //    completed: false
