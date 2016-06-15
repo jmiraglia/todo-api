@@ -6,7 +6,6 @@ var db = require('./db.js');
 var app = express();
 var PORT = process.env.PORT || 3000;
 var todos = [];
-var todo_next_id = 1;
 
 app.use(body_parser.json());
 
