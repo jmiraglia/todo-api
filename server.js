@@ -129,7 +129,7 @@ app.post('/users', function(req, res){
     db.user
         .create(body)
         .then(function (user) {
-            res.status(200).json(user.toJSON());
+            res.status(200).json(user.toPublicJSON());
         })
         .catch(function (e) {
             res.status(400).json(e);
