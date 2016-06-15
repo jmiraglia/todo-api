@@ -56,7 +56,6 @@ app.get('/todos/:id', function (req, res) {
 });
 
 app.post('/todos', function (req, res) {
-    // Only return valid fields
     var body = _.pick(req.body, 'description', 'completed');
 
     db.todo
@@ -121,6 +120,19 @@ app.put('/todos/:id', function (req, res) {
         })
         .catch(function(e){
             res.status(500).json(e);
+        });
+});
+
+app.post('/users', function(req, res){
+    var body = _.pick(req.body, 'email', 'password');
+
+    db.user
+        .create(body)
+        .then(function (user) {
+            res.status(200).json(user.toJSON());
+        })
+        .catch(function (e) {
+            res.status(400).json(e);
         });
 });
 
