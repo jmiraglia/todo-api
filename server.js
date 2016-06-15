@@ -78,45 +78,50 @@ app.delete('/todos/:id', function (req, res) {
                 id: todo_id
             }
         })
-        .then(function(records_deleted){
-            if(records_deleted === 0){
+        .then(function (records_deleted) {
+            if (records_deleted === 0) {
                 res.status(404).json({error: "No todo with id"})
             } else {
                 res.status(204).send();
             }
         })
-        .catch(function(e){
+        .catch(function (e) {
             res.status(500).json(e);
         });
 });
 
 app.put('/todos/:id', function (req, res) {
     var body = _.pick(req.body, 'description', 'completed'),
-        valid_attributes = {},
-        todo_id = parseInt(req.params.id, 10),
-        matched_todo = _.findWhere(todos, {id: todo_id});
+        attributes = {},
+        todo_id = parseInt(req.params.id, 10);
 
-    if (!matched_todo) {
-        return res.status(404).json({"error": "no todo found with that id"});
+    if (body.hasOwnProperty('completed')) {
+        attributes.completed = body.completed;
     }
 
-    if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-        valid_attributes.completed = body.completed;
-    } else if (body.hasOwnProperty('completed') && !_.isBoolean(body.completed)) {
-        return res.status(400).json({"error": "invalid data type for [completed]"});
+    if (body.hasOwnProperty('description')) {
+        attributes.description = body.description;
     }
 
-    if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-        valid_attributes.description = body.description.trim();
-    } else if (body.hasOwnProperty('description') && !_.isString(body.description)) {
-        return res.status(400).json({"error": "invalid data type for [description]"});
-    }
-
-
-    // overwrite with new values
-    _.extend(matched_todo, valid_attributes);
-
-    return res.status(200).json(matched_todo);
+    db.todo
+        .findById(todo_id)
+        .then(function (todo) {
+            if (todo) {
+                todo
+                    .update(attributes)
+                    .then(function (todo) {
+                        res.status(200).json(todo.toJSON());
+                    })
+                    .catch(function(e){
+                        res.status(400).json(e);
+                    });
+            } else {
+                res.status(404).json({error: "No todo by this id found"});
+            }
+        })
+        .catch(function(e){
+            res.status(500).json(e);
+        });
 });
 
 db.sql.sync()
