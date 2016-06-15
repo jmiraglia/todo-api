@@ -2,6 +2,7 @@ var express = require('express');
 var body_parser = require('body-parser');
 var _ = require('underscore');
 var db = require('./db.js');
+var bcrypt = require('bcrypt');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -111,19 +112,19 @@ app.put('/todos/:id', function (req, res) {
                     .then(function (todo) {
                         res.status(200).json(todo.toJSON());
                     })
-                    .catch(function(e){
+                    .catch(function (e) {
                         res.status(400).json(e);
                     });
             } else {
                 res.status(404).json({error: "No todo by this id found"});
             }
         })
-        .catch(function(e){
+        .catch(function (e) {
             res.status(500).json(e);
         });
 });
 
-app.post('/users', function(req, res){
+app.post('/users', function (req, res) {
     var body = _.pick(req.body, 'email', 'password');
 
     db.user
@@ -136,7 +137,19 @@ app.post('/users', function(req, res){
         });
 });
 
-db.sql.sync()
+app.post('/users/login', function (req, res) {
+    var body = _.pick(req.body, 'email', 'password');
+
+    db.user.authenticate(body)
+        .then(function (user){
+            res.status(200).json(user.toPublicJSON());
+        })
+        .catch(function(e){
+            res.status(401).send();
+        });
+});
+
+db.sql.sync({force: true})
     .then(function () {
             app.listen(PORT, function () {
                 console.log('Express server listening on port ' + PORT);

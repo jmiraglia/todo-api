@@ -2,7 +2,7 @@ var bcrypt = require('bcrypt');
 var _ = require('underscore');
 
 module.exports = function (sql, DataTypes) {
-    return sql.define('user', {
+    var user = sql.define('user', {
         email: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -45,6 +45,35 @@ module.exports = function (sql, DataTypes) {
                 var json = this.toJSON();
                 return _.pick(json, 'id', 'email', 'updatedAt', 'createdAt');
             }
+        },
+        classMethods: {
+            authenticate: function(body){
+                return new Promise(function(resolve, reject){
+                    if (typeof body.email !== 'string' || typeof body.password !== 'string') {
+                        return reject();
+                    }
+
+                    user
+                        .findOne(
+                            {
+                                where: {
+                                    email: body.email
+                                }
+                            })
+                        .then(function (user) {
+                            if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))) {
+                                return reject();
+                            }
+
+                            resolve(user);
+                        })
+                        .catch(function (e) {
+                            reject();
+                        });
+                })
+            }
         }
     });
+
+    return user;
 };
