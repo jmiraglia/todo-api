@@ -18,5 +18,3 @@ db.sql = sql;
 db.Sequelize = Sequelize;
 
 module.exports = db;
-
-

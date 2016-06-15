@@ -5,7 +5,6 @@ var db = require('./db.js');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
-var todos = [];
 
 app.use(body_parser.json());
 
@@ -71,16 +70,24 @@ app.post('/todos', function (req, res) {
 });
 
 app.delete('/todos/:id', function (req, res) {
-    var todo_id = parseInt(req.params.id, 10),
-        matched_todo = _.findWhere(todos, {id: todo_id});
+    var todo_id = parseInt(req.params.id, 10);
 
-    if (matched_todo) {
-        // Remove the matched_todo from array of todos
-        todos = _.without(todos, matched_todo);
-        res.status(200).json(matched_todo);
-    } else {
-        res.status(404).json({"error": "no todo found with that id"});
-    }
+    db.todo
+        .destroy({
+            where: {
+                id: todo_id
+            }
+        })
+        .then(function(records_deleted){
+            if(records_deleted === 0){
+                res.status(404).json({error: "No todo with id"})
+            } else {
+                res.status(204).send();
+            }
+        })
+        .catch(function(e){
+            res.status(500).json(e);
+        });
 });
 
 app.put('/todos/:id', function (req, res) {
