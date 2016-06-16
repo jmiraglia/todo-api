@@ -177,7 +177,7 @@ app.post('/users/login', function (req, res) {
 });
 
 db.sql
-    .sync({ force: true })
+    .sync()
     .then(function () {
             app.listen(PORT, function () {
                 console.log('Express server listening on port ' + PORT);
