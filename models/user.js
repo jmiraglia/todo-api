@@ -90,6 +90,32 @@ module.exports = function (sql, DataTypes) {
                             reject();
                         });
                 })
+            },
+            findByToken: function (token) {
+                return new Promise(function (resolve, reject) {
+                    try {
+                        var decoded_jwt = jwt.verify(token, 'qwerty098'),
+                            bytes = cryptojs.AES.decrypt(decoded_jwt.token, 'abc123!@#!'),
+                            token_data = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
+
+                        user
+                            .findById(token_data.id)
+                            .then(function (user) {
+                                if (user) {
+                                    resolve(user);
+                                } else {
+                                    reject();
+                                }
+                            }, function (e) {
+                                reject();
+                            })
+                            .catch(function (e) {
+                                reject();
+                            });
+                    } catch (e) {
+                        reject();
+                    }
+                });
             }
         }
     });

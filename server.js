@@ -3,6 +3,7 @@ var body_parser = require('body-parser');
 var _ = require('underscore');
 var db = require('./db.js');
 var bcrypt = require('bcrypt');
+var middleware = require('./middleware.js')(db);
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -14,7 +15,7 @@ app.get('/', function (req, res) {
 });
 
 // return all todo items
-app.get('/todos', function (req, res) {
+app.get('/todos', middleware.requireAuthentication, function (req, res) {
     var query = req.query,
         where = {};
 
@@ -39,7 +40,7 @@ app.get('/todos', function (req, res) {
 });
 
 // return a single todo item
-app.get('/todos/:id', function (req, res) {
+app.get('/todos/:id', middleware.requireAuthentication, function (req, res) {
     var todo_id = parseInt(req.params.id, 10);
 
     db.todo
@@ -56,7 +57,7 @@ app.get('/todos/:id', function (req, res) {
         });
 });
 
-app.post('/todos', function (req, res) {
+app.post('/todos', middleware.requireAuthentication, function (req, res) {
     var body = _.pick(req.body, 'description', 'completed');
 
     db.todo
@@ -69,7 +70,7 @@ app.post('/todos', function (req, res) {
         });
 });
 
-app.delete('/todos/:id', function (req, res) {
+app.delete('/todos/:id', middleware.requireAuthentication, function (req, res) {
     var todo_id = parseInt(req.params.id, 10);
 
     db.todo
@@ -90,7 +91,7 @@ app.delete('/todos/:id', function (req, res) {
         });
 });
 
-app.put('/todos/:id', function (req, res) {
+app.put('/todos/:id', middleware.requireAuthentication, function (req, res) {
     var body = _.pick(req.body, 'description', 'completed'),
         attributes = {},
         todo_id = parseInt(req.params.id, 10);
@@ -140,22 +141,23 @@ app.post('/users', function (req, res) {
 app.post('/users/login', function (req, res) {
     var body = _.pick(req.body, 'email', 'password');
 
-    db.user.authenticate(body)
-        .then(function (user){
-            var token =  user.generateToken('authentication');
+    db.user
+        .authenticate(body)
+        .then(function (user) {
+            var token = user.generateToken('authentication');
 
-            if(token){
+            if (token) {
                 res.header('Auth', token).json(user.toPublicJSON());
             } else {
                 res.status(401).send();
             }
         })
-        .catch(function(e){
+        .catch(function (e) {
             res.status(401).send();
         });
 });
 
-db.sql.sync({force: true})
+db.sql.sync()
     .then(function () {
             app.listen(PORT, function () {
                 console.log('Express server listening on port ' + PORT);
