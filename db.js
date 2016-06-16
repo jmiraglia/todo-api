@@ -18,4 +18,8 @@ db.user = sql.import(__dirname + '/models/user.js');
 db.sql = sql;
 db.Sequelize = Sequelize;
 
+// Create relationship between users and todo items
+db.todo.belongsTo(db.user);
+db.user.hasMany(db.todo);
+
 module.exports = db;
