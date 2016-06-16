@@ -71,10 +71,10 @@ app.post('/todos', middleware.requireAuthentication, function (req, res) {
         .then(function (todo) {
             req.user
                 .addTodo(todo)
-                .then(function(){
+                .then(function () {
                     return todo.reload();
                 })
-                .then(function(todo){
+                .then(function (todo) {
                     res.status(200).json(todo.toJSON());
                 });
         })
@@ -158,26 +158,42 @@ app.post('/users', function (req, res) {
 });
 
 app.post('/users/login', function (req, res) {
-    var body = _.pick(req.body, 'email', 'password');
+    var body = _.pick(req.body, 'email', 'password'),
+        user_instance;
 
     db.user
         .authenticate(body)
         .then(function (user) {
             var token = user.generateToken('authentication');
+            user_instance = user;
 
-            if (token) {
-                res.header('Auth', token).json(user.toPublicJSON());
-            } else {
-                res.status(401).send();
-            }
+            return db.token
+                .create({
+                    token: token
+                });
+
+        })
+        .then(function (token_instance) {
+            res.header('Auth', token_instance.get('token')).json(user_instance.toPublicJSON());
         })
         .catch(function (e) {
             res.status(401).send();
         });
 });
 
+app.delete('/users/login', middleware.requireAuthentication, function (req, res) {
+    req.token
+        .destroy()
+        .then(function () {
+            res.status(204).send();
+        })
+        .catch(function (e) {
+            res.status(500).send();
+        });
+});
+
 db.sql
-    .sync()
+    .sync({force: true})
     .then(function () {
             app.listen(PORT, function () {
                 console.log('Express server listening on port ' + PORT);
